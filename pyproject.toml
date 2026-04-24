@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forge-sim-lab"
+version = "0.3.0"
+description = "Tkinter and CLI tooling for running headless Card-Forge simulations."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  {name = "OpenAI ChatGPT"}
+]
+dependencies = ["PyYAML>=6.0"]
+
+[project.scripts]
+forge-sim-lab = "forge_sim_lab.__main__:main"
+forge-sim-lab-cli = "forge_sim_lab.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

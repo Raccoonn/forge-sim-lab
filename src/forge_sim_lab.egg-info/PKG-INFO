@@ -1,0 +1,105 @@
+Metadata-Version: 2.4
+Name: forge-sim-lab
+Version: 0.3.0
+Summary: Tkinter and CLI tooling for running headless Card-Forge simulations.
+Author: OpenAI ChatGPT
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: PyYAML>=6.0
+
+# Forge Sim Lab
+
+Tkinter and CLI tooling for running headless Card-Forge simulations.
+
+## Install
+
+```bash
+python -m pip install -e .
+```
+
+## GUI
+
+```bash
+python -m forge_sim_lab
+```
+
+Batch runs support a **Workers** field. Parallel workers are used for non-streaming, no-hook batches.
+If live streaming is enabled, the app falls back to sequential mode so the output stays readable.
+
+## CLI
+
+Single run:
+
+```bash
+forge-sim-lab-cli   --forge-jar /path/to/forge-gui-desktop-jar-with-dependencies.jar   --deck wyleth_voltron_test.dck   --deck krydle_dirty_mill_voltron.dck   --format commander   --games 20   --quiet   --print-command
+```
+
+Parallel batch:
+
+```bash
+forge-sim-lab-cli   --forge-jar /path/to/forge-gui-desktop-jar-with-dependencies.jar   --deck wyleth_voltron_test.dck   --deck krydle_dirty_mill_voltron.dck   --format commander   --games 1   --repetitions 200   --workers 8   --output-dir ./runs   --quiet
+```
+
+## YAML batch configs
+
+You can iterate through plans with a YAML file and optional shell hooks.
+
+```yaml
+defaults:
+  forge_jar: /home/you/forge-installer-2.0.11/forge-gui-desktop-2.0.11-jar-with-dependencies.jar
+  prefer_forge_script: true
+  deck_directory: /home/you/.forge/decks/commander
+  format_name: commander
+  game_count: 1
+  quiet: true
+  timeout_seconds: 600
+  output_directory: /home/you/forge-runs
+  workers: 8
+
+plans:
+  - name: voltron_vs_mill
+    decks:
+      - wyleth_voltron_test.dck
+      - krydle_dirty_mill_voltron.dck
+    repetitions: 100
+    output_directory: /home/you/forge-runs/voltron_vs_mill
+
+  - name: scripted_plan
+    decks:
+      - wyleth_voltron_test.dck
+      - krydle_dirty_mill_voltron.dck
+    repetitions: 20
+    workers: 1
+    stream_output: false
+    output_directory: /home/you/forge-runs/scripted_plan
+    hooks:
+      cwd: /home/you/bin/forge-automation
+      before_all:
+        - ./prepare_env.sh
+      before_each:
+        - ./rotate_logs.sh "$FORGE_SIM_RUN_INDEX" "$FORGE_SIM_RUN_DIR"
+      after_each:
+        - ./collect_extra_stats.sh "$FORGE_SIM_RUN_DIR"
+      after_all:
+        - ./package_results.sh "$FORGE_SIM_OUTPUT_DIR"
+```
+
+Run it:
+
+```bash
+forge-sim-lab-cli --config-file ./batch.yaml
+```
+
+### Hook environment variables
+
+- `FORGE_SIM_PLAN_NAME`
+- `FORGE_SIM_OUTPUT_DIR`
+- `FORGE_SIM_RUN_INDEX`
+- `FORGE_SIM_TOTAL_RUNS`
+- `FORGE_SIM_RUN_DIR`
+
+## Notes
+
+- Forge supports up to 8 players.
+- Commander sims resolve deck names from `~/.forge/decks/commander`.
+- Parallel workers are only used for non-streaming batch runs without per-run hooks.

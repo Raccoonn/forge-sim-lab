@@ -1,0 +1,35 @@
+defaults:
+  forge_jar: /home/raccoonn/forge-installer-2.0.11/forge-gui-desktop-2.0.11-jar-with-dependencies.jar
+  prefer_forge_script: true
+  deck_directory: /home/raccoonn/.forge/decks/commander
+  format_name: commander
+  game_count: 1
+  quiet: true
+  timeout_seconds: 600
+  workers: 1
+
+plans:
+  - name: voltron_vs_mill
+    decks:
+      - wyleth_voltron_test.dck
+      - krydle_dirty_mill_voltron.dck
+    repetitions: 100
+    output_directory: /home/raccoonn/forge-runs/voltron_vs_mill
+
+  - name: scripted_plan
+    decks:
+      - wyleth_voltron_test.dck
+      - krydle_dirty_mill_voltron.dck
+    repetitions: 20
+    workers: 1
+    output_directory: /home/raccoonn/forge-runs/scripted_plan
+    hooks:
+      cwd: /home/raccoonn/bin/forge-automation
+      before_all:
+        - ./prepare_env.sh
+      before_each:
+        - ./rotate_logs.sh "$FORGE_SIM_RUN_INDEX" "$FORGE_SIM_RUN_DIR"
+      after_each:
+        - ./collect_extra_stats.sh "$FORGE_SIM_RUN_DIR"
+      after_all:
+        - ./package_results.sh "$FORGE_SIM_OUTPUT_DIR"
